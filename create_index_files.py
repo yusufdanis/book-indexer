@@ -37,14 +37,17 @@ openai_api_key = config_parser["keys"]["openaikey"]
 # Initialize the OpenAI client
 client = OpenAI(api_key=openai_api_key)
 
+# Get list of files to process
 files_to_parse = os.listdir(__CONTENT_DIR)
 
+# Iterate through each markdown file in the content directory
 for mdfile in sorted(files_to_parse):
     if not mdfile.endswith(".md"):
         continue
     print(f"Processing file: {mdfile}")
     base_file_name = os.path.splitext(mdfile)[0]
 
+    # Parse file into sections based on header markers
     sections = []
     current_section = {"title": "", "contents": []}
     with open(os.path.join(__CONTENT_DIR, mdfile)) as f:
@@ -57,6 +60,7 @@ for mdfile in sorted(files_to_parse):
                 current_section = {"title": line[2:], "contents": []}
         sections.append(current_section)
 
+    # Process each section of the file
     section_number = 1
     for section in sections:
         if (len(section["contents"])) < 5:
@@ -85,7 +89,7 @@ for mdfile in sorted(files_to_parse):
                 print("Calling OpenAI API...")
                 text = "".join(part)
                 response = client.chat.completions.create(
-                    model="gpt-4o-mini",  # or whichever model you're using
+                    model="gpt-4o-mini",
                     messages=[
                         {"role": "system", "content": prompt},
                         {"role": "user", "content": text},
@@ -93,6 +97,7 @@ for mdfile in sorted(files_to_parse):
                 )
 
                 print("Writing output files...")
+                # Save raw API response
                 with open(outfile + ".txt", "w") as f:
                     f.write(json.dumps(response, indent=2))
 
