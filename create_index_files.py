@@ -1,13 +1,18 @@
+"""
+    Creates JSON index files from Markdown content by interacting with the OpenAI API.
+"""
+
 import configparser
 import json
 import os
 from openai import OpenAI
 
-# Constants
+# Constants for directories and prompt configuration
 __CONTENT_DIR = "data/mds_without_refs"
 __OUTPUT_DIR = "data/indexes"
 __CONTENT_PROMPT_LENGTH = 200
 
+# Prompt template for the OpenAI API
 prompt = """You are a highly professional editor specializing in wilderness and disaster medicine. Your task is to create a JSON-formatted structured index of the provided Turkish text. Ignore Markdown syntax like bullet points and links but consider headers for context. Minimum length of the index to 25 terms. Follow these strict criteria:
 
 a. Terms relevant to wilderness and disaster medicine.
@@ -31,20 +36,21 @@ The JSON format should be as follows:
 The text to be indexed is:
 """
 
+# Read OpenAI API configuration from ini file
 config_parser = configparser.ConfigParser()
 config_parser.read("openaiconfig.ini")
 openai_api_key = config_parser["keys"]["openaikey"]
 
-# Initialize the OpenAI client
+# Initialize the OpenAI client with the API key
 client = OpenAI(api_key=openai_api_key)
 
-# Get list of files to process
+# Get list of Markdown files to process
 files_to_parse = os.listdir(__CONTENT_DIR)
 
-# Iterate through each markdown file in the content directory
+# Iterate through each Markdown file in the content directory
 for mdfile in sorted(files_to_parse):
     if not mdfile.endswith(".md"):
-        continue
+        continue  # Skip non-Markdown files
     print(f"Processing file: {mdfile}")
     base_file_name = os.path.splitext(mdfile)[0]
 
@@ -59,14 +65,16 @@ for mdfile in sorted(files_to_parse):
             else:
                 sections.append(current_section)
                 current_section = {"title": line[2:], "contents": []}
-        sections.append(current_section)
+        sections.append(current_section)  # Add the last section
 
     # Process each section of the file
     section_number = 1
     for section in sections:
-        if (len(section["contents"])) < 5:
-            continue
+        if len(section["contents"]) < 5:
+            continue  # Skip sections that are too short
         print(f"Section: {section['title'].strip()} ({len(section['contents'])} lines)")
+
+        # Split the section contents into parts based on the prompt length
         section_parts = [
             section["contents"][
                 i * __CONTENT_PROMPT_LENGTH : (i + 1) * __CONTENT_PROMPT_LENGTH
@@ -80,8 +88,10 @@ for mdfile in sorted(files_to_parse):
 
         lines = 0
         for part in section_parts:
+            # Ensure the output directory exists
             if not os.path.exists(__OUTPUT_DIR):
                 os.mkdir(__OUTPUT_DIR)
+            # Define the output file name with structured naming
             outfile = os.path.join(
                 __OUTPUT_DIR,
                 f"{base_file_name}-{section_number:02d}-{''.join(x for x in section['title'] if x.isalnum())}-{lines:04d}-{(lines+len(part)):04d}",
@@ -89,6 +99,7 @@ for mdfile in sorted(files_to_parse):
             if not os.path.exists(outfile + ".json"):
                 print("Calling OpenAI API...")
                 text = "".join(part)
+                # Make a request to the OpenAI Chat Completion API
                 response = client.chat.completions.create(
                     model="gpt-4o",
                     messages=[
@@ -98,7 +109,7 @@ for mdfile in sorted(files_to_parse):
                 )
 
                 print("Writing output files...")
-                # Save relevant API response data
+                # Save the raw API response data to a text file
                 response_data = {
                     "id": response.id,
                     "created": response.created,
@@ -118,6 +129,7 @@ for mdfile in sorted(files_to_parse):
                 with open(outfile + ".txt", "w") as f:
                     f.write(json.dumps(response_data, indent=2))
 
+                # Extract the JSON content from the API response
                 result = response.choices[0].message.content
                 try:
                     # Clean the result to remove any leading or trailing JSON markers
@@ -128,10 +140,11 @@ for mdfile in sorted(files_to_parse):
                         cleaned_result = cleaned_result[:-3]
                     # Convert the cleaned JSON string to a Python object
                     result_json = json.loads(cleaned_result)
-                    # Convert the Python object back to a JSON string and write it to the file
+                    # Write the JSON object to a file with proper formatting
                     with open(outfile + ".json", "w", encoding="utf-8") as f:
                         json.dump(result_json, f, ensure_ascii=False, indent=4)
                 except json.JSONDecodeError:
+                    # Handle cases where the API response is not valid JSON
                     print(f"Warning: Invalid JSON returned for {outfile}. Saving raw content.")
                     with open(outfile + ".json", "w", encoding="utf-8") as f:
                         f.write(result)
