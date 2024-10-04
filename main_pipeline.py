@@ -17,10 +17,10 @@ def run_script(command, description):
 def main():
     # Define the scripts and their descriptions
     scripts = [
-        #{
-        #    'command': ['python', 'create_index_files.py'],
-        #    'description': 'Markdown Dosyalarından İndeks Oluşturulması'
-        #},
+        {
+            'command': ['python', 'create_index_files.py'],
+            'description': 'Markdown Dosyalarından İndeks Oluşturulması'
+        },
         {
             'command': ['python', 'combine_indexes.py'],
             'description': 'İndeks Dosyalarının Birleştirilmesi'
