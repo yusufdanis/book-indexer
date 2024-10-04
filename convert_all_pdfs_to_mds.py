@@ -6,7 +6,7 @@ def convert_pdf_to_md_shell(pdf_path, md_path, crop_amount, language):
     """
     Converts a single PDF file to Markdown using the convert_pdf_to_md.sh shell script.
     """
-    script_path = './convert_pdf_to_md.sh'  # Shell scriptinizin doğru yolunu belirtin
+    script_path = './convert_pdf_to_md.sh'
     try:
         subprocess.run([script_path, pdf_path, md_path, str(crop_amount), language], check=True)
     except subprocess.CalledProcessError as e:

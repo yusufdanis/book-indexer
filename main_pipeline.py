@@ -19,15 +19,15 @@ def main():
     scripts = [
         {
             'command': ['python', 'create_index_files.py'],
-            'description': 'Markdown Dosyalarından İndeks Oluşturulması'
+            'description': 'Creating indices from Markdown files'
         },
         {
             'command': ['python', 'combine_indexes.py'],
-            'description': 'İndeks Dosyalarının Birleştirilmesi'
+            'description': 'Combining index files'
         },
         {
             'command': ['python', 'extract_terms.py'],
-            'description': 'Terimlerin Çıkarılması'
+            'description': 'Extracting terms'
         }
     ]
 
@@ -35,7 +35,7 @@ def main():
     for script in scripts:
         run_script(script['command'], script['description'])
 
-    print("Tüm adımlar başarıyla tamamlandı.")
+    print("All steps completed successfully.")
 
 if __name__ == "__main__":
     main()
