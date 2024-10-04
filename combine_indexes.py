@@ -5,7 +5,7 @@
 import json
 import os
 
-__OUTPUT_DIR = 'output'
+__OUTPUT_DIR = 'data/indexes'
 
 def is_valid_index_json(index_part:dict)->bool:
     for key in index_part:
@@ -46,16 +46,20 @@ for index_file in sorted(files_to_parse):
             context = {'reference': base_file_name, 'context': index_term['context']}
             related_terms = index_term['related_terms']
 
-            # If term already exists in master_index
-            if term in master_index:
+            # Case-insensitive check for existing term in master_index
+            matching_key = next((key for key in master_index if key.lower() == term.lower()), None)
+            
+            if matching_key:
                 # Combine context
-                master_index[term]['context'].append(context)
+                master_index[matching_key]['context'].append(context)
                 
                 # Combine related terms
-                master_index[term]['related_terms'] = list(set(master_index[term]['related_terms'] + related_terms))
+                master_index[matching_key]['related_terms'] = list(set(master_index[matching_key]['related_terms'] + related_terms))
             else:
-                master_index[term] = {'context':[context], 'related_terms': related_terms}
+                master_index[term] = {'context': [context], 'related_terms': related_terms}
 
 print("writing master index file")
-with open("master_index.json", "w") as f:
-    f.write(json.dumps(master_index, indent=2, sort_keys=True))
+with open("data/master_index.json", "w", encoding="utf-8") as f:
+    # Sort the master_index keys case-insensitively
+    sorted_master_index = dict(sorted(master_index.items(), key=lambda x: x[0].lower()))
+    json.dump(sorted_master_index, f, indent=2, ensure_ascii=False)

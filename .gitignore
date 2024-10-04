@@ -166,4 +166,7 @@ output/
 
 # yusufdanis
 Icon?
-my-data/
+*.pdf
+*.md
+*.json
+*.txt

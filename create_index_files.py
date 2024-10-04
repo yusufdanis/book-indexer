@@ -4,27 +4,28 @@ import os
 from openai import OpenAI
 
 # Constants
-__CONTENT_DIR = "content"
-__OUTPUT_DIR = "output"
+__CONTENT_DIR = "data/mds_without_refs"
+__OUTPUT_DIR = "data/indexes"
 __CONTENT_PROMPT_LENGTH = 200
 
-prompt = """Using the following criteria for selection, provide a JSON-formatted structured index of the following chunk of text, ignoring Markdown syntax like bullet points and links but considering headers for context. Limit the length of the index to 25 terms:
-a. Relevance to leadership of software development organizations
-b. Word is used frequently
-c. Term is specific and precise
-d. Suggest related terms for cross-referencing
-e. Accommodate professional-level reader comprehension
-f. Consistent, organized and comprehensive results
-g. Proper Names
+prompt = """You are a highly professional editor specializing in wilderness and disaster medicine. Your task is to create a JSON-formatted structured index of the provided Turkish text. Ignore Markdown syntax like bullet points and links but consider headers for context. Minimum length of the index to 25 terms. Follow these strict criteria:
 
-the format of the JSON should be of the form
+a. Terms relevant to wilderness and disaster medicine.
+b. Terms are frequently used within the text.
+c. Terms that are specific and precise.
+d. Suggest related terms for cross-referencing.
+e. Accommodate professional-level reader comprehensio
+f. Maintain consistency, organization, and comprehensiveness.
+g. Include proper names where applicable.
+
+The JSON format should be as follows:
 {
-     "1": {
-                 "term": <term>,
-                 "related_terms": [],
-                 "context": []
-      },
-      ...
+    "1": {
+        "term": "<term>",
+        "related_terms": [],
+        "context": []
+    },
+    ...
 }
 
 The text to be indexed is:
@@ -89,7 +90,7 @@ for mdfile in sorted(files_to_parse):
                 print("Calling OpenAI API...")
                 text = "".join(part)
                 response = client.chat.completions.create(
-                    model="gpt-4o-mini",
+                    model="gpt-4o",
                     messages=[
                         {"role": "system", "content": prompt},
                         {"role": "user", "content": text},
@@ -97,14 +98,43 @@ for mdfile in sorted(files_to_parse):
                 )
 
                 print("Writing output files...")
-                # Save raw API response
+                # Save relevant API response data
+                response_data = {
+                    "id": response.id,
+                    "created": response.created,
+                    "model": response.model,
+                    "choices": [
+                        {
+                            "index": choice.index,
+                            "message": {
+                                "role": choice.message.role,
+                                "content": choice.message.content
+                            },
+                            "finish_reason": choice.finish_reason
+                        }
+                        for choice in response.choices
+                    ]
+                }
                 with open(outfile + ".txt", "w") as f:
-                    f.write(json.dumps(response, indent=2))
+                    f.write(json.dumps(response_data, indent=2))
 
-                with open(outfile + ".json", "w") as f:
-                    result = response.choices[0].message.content
-                    result_json = json.loads(result)
-                    f.write(json.dumps(result_json, indent=2))
+                result = response.choices[0].message.content
+                try:
+                    # Clean the result to remove any leading or trailing JSON markers
+                    cleaned_result = result.strip()
+                    if cleaned_result.startswith("```json"):
+                        cleaned_result = cleaned_result[7:]
+                    if cleaned_result.endswith("```"):
+                        cleaned_result = cleaned_result[:-3]
+                    # Convert the cleaned JSON string to a Python object
+                    result_json = json.loads(cleaned_result)
+                    # Convert the Python object back to a JSON string and write it to the file
+                    with open(outfile + ".json", "w", encoding="utf-8") as f:
+                        json.dump(result_json, f, ensure_ascii=False, indent=4)
+                except json.JSONDecodeError:
+                    print(f"Warning: Invalid JSON returned for {outfile}. Saving raw content.")
+                    with open(outfile + ".json", "w", encoding="utf-8") as f:
+                        f.write(result)
             else:
                 print(f"Output file {outfile}.json already exists, skipping.")
 
