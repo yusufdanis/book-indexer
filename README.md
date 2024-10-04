@@ -88,6 +88,24 @@ Use the provided shell script to convert DOCX files to Markdown. Ensure you have
 ./convert_docx_to_md.sh input.docx output.md
 ```
 
+### Measuring Crop for PDF Conversion
+
+Before converting PDF files to Markdown, it's recommended to determine the optimal crop value. Use the provided `measure_crop.sh` script to generate sample crops:
+
+```bash
+./measure_crop.sh input.pdf
+```
+
+After running this script, check the `measure_crop_results` directory and its subdirectories (crop_50, crop_100, crop_150, crop_200) to determine the best crop value for your PDF conversion.
+
+### Converting PDF to Markdown
+
+Use the provided shell script to convert PDF files to Markdown. Ensure you have the necessary permissions to execute the script.
+
+```bash
+./convert_pdf_to_md.sh input.pdf output.md crop_amount language
+```
+
 **Parameters:**
 - `input.pdf`: Path to the input PDF file.
 - `output.md`: Path where the converted Markdown file will be saved.
@@ -98,6 +116,14 @@ Use the provided shell script to convert DOCX files to Markdown. Ensure you have
 
 ```bash
 ./convert_docx_to_md.sh input.docx output.md 100 tur+eng
+```
+
+### Converting All PDFs in a Directory
+
+Use the provided shell script to convert all PDF files in a spesific directory. Ensure you have the necessary permissions to execute the script.
+
+```bash
+pythonconvert_all_pdfs_to_mds.py
 ```
 
 ### Extracting Terms
