@@ -51,16 +51,16 @@ Special thanks to the [Original Repository](https://github.com/kevingoldsmith/op
 
 ## Configuration
 
-1. **Set Up OpenAI API Key**
+**Set Up OpenAI API Key**
 
-   Create a file named `openaiconfig.ini` in the root directory with the following content:
+Create a file named `openaiconfig.ini` in the root directory with the following content:
 
-   ```ini
-   [keys]
-   openaikey = <your_open_ai_key>
-   ```
+```ini
+[keys]
+openaikey = <your_open_ai_key>
+```
 
-   Replace `<your_open_ai_key>` with your actual OpenAI API key.
+Replace `<your_open_ai_key>` with your actual OpenAI API key.
 
 ## Usage
 
